@@ -36,33 +36,41 @@
 - ✨Magic ✨
 
 ## Цель работы
-Ознакомиться с основными операторами языка Python на примере реализации линейной регрессии.
+Познакомиться с программными средствами для организции
+передачи данных между инструментами google, Python и Unity
 
 ## Задание 1
-### Вывод строки "Hello World!" в Python
+### Реализовать совместную работу и передачу данных в связке Python - Google-Sheets – Unity.
 ```py
-print ("Hello, World!")
+import gspread
+import numpy as np
+gc = gspread.service_account(filename='unityds-246dc8312ba8.json')
+sh = gc.open("UnitySheets")
+price = np.random.randint(2000, 10000, 11)
+mon = list(range(1,11))
+i = 0
+while i <= len(mon):
+    i += 1
+    if i== 0:
+        continue
+    else:
+        tempInf = ((price[i-1]-price[i-2])/price[i-2])*100
+        tempInf = str(tempInf)
+        tempInf = tempInf.replace('.', ',')
+        sh.sheet1.update(('A' + str(i)), str(i))
+        sh.sheet1.update(('B' + str(i)), str(price[i-1]))
+        sh.sheet1.update(('C' + str(i)), str(tempInf))
+        print(tempInf)
 ```
-![Lab1_Task1](https://user-images.githubusercontent.com/48391156/193573415-e5cc2379-7613-4019-a9df-c50ccee8f41c.png)
+Сначала было необходимо в облачном сервисе google console подключить API для работы с google
+sheets и google drive. Создать уникальный ключ для обращения.
+Создать пустую таблицу в Google Sheets, для переноса данных.
+В настройках доступа дать доступ по email, созданным в Google Cloud Service.
+![Gsheets](https://user-images.githubusercontent.com/48391156/194130098-2e976663-0824-4dd0-87d5-9daf8f94d38c.png)
 
 
-### Вывод строки "Hello World!" в Unity
-```py
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
-public class Lab1_Task1 : MonoBehaviour
-{
-    // Start is called before the first frame update
-    void Start()
-    {
-        Debug.Log("Hello, World!!!");
-    }
 
-}
-```
-![Lab1_Task1,1](https://user-images.githubusercontent.com/48391156/193578053-d70f4bb1-8022-41ba-a8d6-01f873d15d21.png)
 
 ## Задание 2
 ### Пошагово выполнить каждый пункт с описанием и примером реализации задачи по теме лабораторной работы.
