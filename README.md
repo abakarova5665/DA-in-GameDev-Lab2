@@ -1,5 +1,5 @@
 # DA-in-GameDev-Lab2
-# АНАЛИЗ ДАННЫХ И ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ [in GameDev]
+# СБОР, ОБРАБОТКА И ВИЗУАЛИЗАЦИЯ ТЕСТОВОГО НАБОРА ДАННЫХ. [in GameDev]
 Отчет по лабораторной работе #2 выполнил(а):
 - Абакарова Кистаман Умарасхабовна
 - X21IT_AI-01BL
@@ -39,7 +39,8 @@
 Познакомиться с программными средствами для организции
 передачи данных между инструментами google, Python и Unity
 
-##Постановка задачи.
+
+Постановка задачи.
 В данной лабораторной работе на языке python будет реализован функционал,
 позволяющий генерировать стоимость товара (ресурса или игрового объекта) в виде
 набора данных. Созданный набор данных будет передан в google-таблицу с целью
@@ -51,6 +52,14 @@
 
 ## Задание 1
 ### Реализовать совместную работу и передачу данных в связке Python - Google-Sheets – Unity.
+
+Сначала было необходимо в облачном сервисе google console подключить API для работы с google
+sheets и google drive. Создать уникальный ключ для обращения.
+Создать пустую таблицу в Google Sheets, для переноса данных.
+В настройках доступа дать доступ по email, созданным в Google Cloud Service.
+
+![APIKey](https://user-images.githubusercontent.com/48391156/194374305-8f1d2bdb-2363-413e-abdf-b55df534b40f.png)
+
 ```py
 import gspread
 import numpy as np
@@ -72,156 +81,120 @@ while i <= len(mon):
         sh.sheet1.update(('C' + str(i)), str(tempInf))
         print(tempInf)
 ```
-Сначала было необходимо в облачном сервисе google console подключить API для работы с google
-sheets и google drive. Создать уникальный ключ для обращения.
-Создать пустую таблицу в Google Sheets, для переноса данных.
-В настройках доступа дать доступ по email, созданным в Google Cloud Service.
+
 Вот вывод в таблицы:
 ![Gsheets](https://user-images.githubusercontent.com/48391156/194130098-2e976663-0824-4dd0-87d5-9daf8f94d38c.png)
 
+Был создан Unity проект, где будут воспроизводиться треки в зависимости от полученных данных из таблицы.
+![unitysounds](https://user-images.githubusercontent.com/48391156/194374964-e8f814a2-ca16-4887-b564-aca003c5fcf2.png)
 
 
 
+Реализация получения данных из таблиц:
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using SimpleJSON;
+
+public class NewBehaviourScript : MonoBehaviour
+{
+    public AudioClip goodSpeak;
+    public AudioClip normalSpeak;
+    public AudioClip badSpeak;
+    private AudioSource selectAudio;
+    private Dictionary<string,float> dataSet = new Dictionary<string, float>();
+    private bool statusStart = false;
+    private int i = 1;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        StartCoroutine(GoogleSheets());
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (dataSet["Mon_" + i.ToString()] <= 10 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioGood());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] > 10 & dataSet["Mon_" + i.ToString()] < 100 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioNormal());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] >= 100 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioBad());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+    }
+
+    IEnumerator GoogleSheets()
+    {
+        UnityWebRequest curentResp = UnityWebRequest.Get("https://sheets.googleapis.com/v4/spreadsheets/1db3SpD7IfABScVSAwswjPg_cWyLS1F8ffwPPdMFt3ac/values/Лист1?key=AIzaSyAF3FRZfN5RX_4LaW4X0a2NNEJQalXYOfw");
+        yield return curentResp.SendWebRequest();
+        string rawResp = curentResp.downloadHandler.text;
+        var rawJson = JSON.Parse(rawResp);
+        foreach (var itemRawJson in rawJson["values"])
+        {
+            var parseJson = JSON.Parse(itemRawJson.ToString());
+            var selectRow = parseJson[0].AsStringList;
+            dataSet.Add(("Mon_" + selectRow[0]), float.Parse(selectRow[2]));
+        }
+    }
+```
+
+В зависимости от полученных данных, воспроизводится аудио
+```c#
+   IEnumerator PlaySelectAudioGood()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = goodSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        i++;
+    }
+    IEnumerator PlaySelectAudioNormal()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = normalSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        i++;
+    }
+    IEnumerator PlaySelectAudioBad()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = badSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(4);
+        statusStart = false;
+        i++;
+    }
+}
+```
 
 ## Задание 2
-### Пошагово выполнить каждый пункт с описанием и примером реализации задачи по теме лабораторной работы.
-
-```py
-#Import the required modules, numpy for calculation, and Matplotlib for drawing
-import numpy as np
-import matplotlib.pyplot as plt
-#This code is for jupyter Notebook only
-%matplotlib inline
-# define data, and change list to array
-x = [3,21,22,34,54,34,55,67,89,99]
-x = np.array(x)
-y = [2,22,24,65,79,82,55,130,150,199]
-y = np.array(y)
-#Show the effect of a scatter plot
-plt.scatter(x,y)
-```
-![image](https://user-images.githubusercontent.com/48391156/193639103-518d2827-f45b-48c3-bda1-c9e75fdadac1.png)
-
-
-
-
-
-```py
-#The basic linear regression model is wx+ b, and since this is a two-dimensional space, the model is ax+ b
-def model(a, b, x):
-  return a*x + b
-#Tahe most commonly used loss function of linear regression model is the lossfunction of mean variance difference
-def loss_function(a, b, x, y):
-  num = len(x)
-  prediction=model(a,b,x)
-  return (0.5/num) * (np.square(prediction-y)).sum()
-#The optimization function mainly USES partial derivatives to update two parameters a and b
-def optimize(a,b,x,y):
-  num = len(x)
-  prediction = model(a,b,x)
-#Update the values of A and B by finding the partial derivatives of the loss function on a and b
-  da = (1.0/num) * ((prediction -y)*x).sum()
-  db = (1.0/num) * ((prediction -y).sum())
-  a = a - Lr*da
-  b = b - Lr*db
-  return a, b
-#iterated function, return a and b
-def iterate(a,b,x,y,times):
-  for i in range(times):
-    a,b = optimize(a,b,x,y)
-  return a,b
-```
-```py
-#Initialize parameters and display
-a = np.random.rand(1)
-print(a)
-b = np.random.rand(1)
-print(b)
-Lr = 0.000001
-#For the first iteration, the parameter values, losses, and visualization after the iteration are displayed
-a,b = iterate(a,b,x,y,1)
-prediction=model(a,b,x)
-loss = loss_function(a, b, x, y)
-print(a,b,loss)
-plt.scatter(x,y)
-plt.plot(x,prediction)
-```
-![t112](https://user-images.githubusercontent.com/48391156/193638870-51d3a219-d33f-48fc-b5cf-c26fa6bf2090.png)
-
-
-```py
-a,b = iterate(a,b,x,y,2)
-prediction=model(a,b,x)
-loss = loss_function(a, b, x, y)
-print(a,b,loss)
-plt.scatter(x,y)
-plt.plot(x,prediction)
-```
-![t113](https://user-images.githubusercontent.com/48391156/193639402-078bcf25-4b8e-4d46-96a0-cf39a68dc828.png)
-
-```py
-a,b = iterate(a,b,x,y,4)
-prediction=model(a,b,x)
-loss = loss_function(a, b, x, y)
-print(a,b,loss)
-plt.scatter(x,y)
-plt.plot(x,prediction)
-```
-![t114](https://user-images.githubusercontent.com/48391156/193639603-81691b3f-fc30-4083-a0c3-81b650d7dbb4.png)
-
-```py
-a,b = iterate(a,b,x,y,5)
-prediction=model(a,b,x)
-loss = loss_function(a, b, x, y)
-print(a,b,loss)
-plt.scatter(x,y)
-plt.plot(x,prediction)
-```
-![t115](https://user-images.githubusercontent.com/48391156/193639852-2e033b29-3d11-475c-ba2e-b4e9662a0c60.png)
-
-```py
-a,b = iterate(a,b,x,y,10000)
-prediction=model(a,b,x)
-loss = loss_function(a, b, x, y)
-print(a,b,loss)
-plt.scatter(x,y)
-plt.plot(x,prediction)
-```
-![t116](https://user-images.githubusercontent.com/48391156/193640008-0a183961-ebec-456f-86ec-e63f5d81b508.png)
-
 
 
 ## Задание 3
-### Какова роль параметра Lr? Ответьте на вопрос, приведите пример выполнения кода, который подтверждает ваш ответ. В качестве эксперимента можете изменить значение параметра.
 
-- Перечисленные в этом туториале действия могут быть выполнены запуском на исполнение скрипт-файла, доступного [в репозитории](https://github.com/Den1sovDm1triy/hfss-scripting/blob/main/ScreatingSphereInAEDT.py).
-- Для запуска скрипт-файла откройте Ansys Electronics Desktop. Перейдите во вкладку [Automation] - [Run Script] - [Выберите файл с именем ScreatingSphereInAEDT.py из репозитория].
-
-```py
-
-import ScriptEnv
-ScriptEnv.Initialize("Ansoft.ElectronicsDesktop")
-oDesktop.RestoreWindow()
-oProject = oDesktop.NewProject()
-oProject.Rename("C:/Users/denisov.dv/Documents/Ansoft/SphereDIffraction.aedt", True)
-oProject.InsertDesign("HFSS", "HFSSDesign1", "HFSS Terminal Network", "")
-oDesign = oProject.SetActiveDesign("HFSSDesign1")
-oEditor = oDesign.SetActiveEditor("3D Modeler")
-oEditor.CreateSphere(
-	[
-		"NAME:SphereParameters",
-		"XCenter:="		, "0mm",
-		"YCenter:="		, "0mm",
-		"ZCenter:="		, "0mm",
-		"Radius:="		, "1.0770329614269mm"
-	], 
-)
-
-```
 
 ## Выводы
+Я получила базовые навыки работы с google cloud console, получать и использовать данные из таблиц.
 
-Абзац умных слов о том, что было сделано и что было узнано.
 
 | Plugin | README |
 | ------ | ------ |
