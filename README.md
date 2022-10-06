@@ -187,14 +187,43 @@ public class NewBehaviourScript : MonoBehaviour
 }
 ```
 
-## Задание 2
-
 
 ## Задание 3
+Самостоятельно разработать сценарий воспроизведения звукового
+сопровождения в Unity в зависимости от изменения считанных данных в задании 2
+
+
+Здесь модификация кода в Unity
+```c#
+ void Update()
+    {
+        if (dataSet["Mon_" + i.ToString()] <= 200 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioGood());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] > 200 & dataSet["Mon_" + i.ToString()] < 300 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioNormal());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] >= 300 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioBad());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+    }
+```
+Запуск в Unity
+![soundss](https://user-images.githubusercontent.com/48391156/194411226-714d4e09-b51c-4b72-b1ff-e276e4b30d34.png)
+
+
 
 
 ## Выводы
-Я получила базовые навыки работы с google cloud console, получать и использовать данные из таблиц.
+Я получила базовые навыки работы с google cloud console, получать и использовать данные из таблиц, более детально поработала в среде разработки Unity, научилась любить консоль и ошибки.
 
 
 | Plugin | README |
